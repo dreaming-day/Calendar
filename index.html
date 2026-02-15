@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>펜션 예약 현황 7</title>
+    <title>펜션 예약 현황</title>
     <style>
         * {
             margin: 0;
@@ -821,7 +821,7 @@
                     ? 'https://m.booking.naver.com/booking/3/bizes/841062/items/4853137?theme=place&lang=ko&area=ple' 
                     : 'https://m.booking.naver.com/booking/3/bizes/841062/items/4853141?theme=place&lang=ko&area=ple';
                 
-                if (confirm(`${building}동\n${formatted}\n\n🔵 예약 가능합니다!\n\n예약 페이지로 이동하시겠습니까?`)) {
+                if (confirm(`${building}동\n${formatted}\n\n🔵 예약 가능합니다!\n\n확인을 클릭하시면 숙박 금액 정보를 확인하실 수 있습니다.`)) {
                     window.open(reservationUrl, '_blank');
                 }
             } 
