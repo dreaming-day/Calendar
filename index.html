@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>펜션 예약 현황 7</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+            width: 100%;
+        }
+
+        .container {
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 1.2em;
+            padding: 40px;
+        }
+
+        .error {
+            background: #ff5252;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .calendar-wrapper {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 600px), 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .building-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .building-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #f0f0f0;
+        }
+
+        .building-badge {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8em;
+            font-weight: bold;
+            color: white;
+            margin-right: 15px;
+        }
+
+        .building-a .building-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .building-b .building-badge {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .building-info h2 {
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .building-info p {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .month-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-radius: 12px;
+        }
+
+        .month-nav button {
+            background: white;
+            border: 2px solid #e0e0e0;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .month-nav button:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .month-nav button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .current-month {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .calendar {
+            width: 100%;
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        .calendar-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .day-name {
+            text-align: center;
+            padding: 12px;
+            font-weight: 600;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .day-name.sunday {
+            color: #f5576c;
+        }
+
+        .day-name.saturday {
+            color: #667eea;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            border: 2px solid transparent;
+            background: #f8f9fa;
+        }
+
+        .calendar-day.other-month {
+            opacity: 0.3;
+        }
+
+        .calendar-day .date {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .calendar-day.sunday .date {
+            color: #f5576c;
+        }
+
+        .calendar-day.saturday .date {
+            color: #667eea;
+        }
+
+        .calendar-day.available {
+            background: #e8f5e9;
+            border-color: #4caf50;
+        }
+
+        .calendar-day.available:hover {
+            background: #c8e6c9;
+            transform: scale(1.05);
+        }
+
+        .calendar-day.booked {
+            background: #ffebee;
+            border-color: #f44336;
+        }
+
+        .calendar-day.today {
+            box-shadow: 0 0 0 3px #ffd700;
+        }
+
+        .status-badge {
+            font-size: 1.2em;
+            line-height: 1;
+        }
+
+        .available .status-badge::before {
+            content: '🟢';
+        }
+
+        .booked .status-badge::before {
+            content: '🔴';
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .legend-box {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            border: 2px solid;
+        }
+
+        .legend-box.available {
+            background: #e8f5e9;
+            border-color: #4caf50;
+        }
+
+        .legend-box.booked {
+            background: #ffebee;
+            border-color: #f44336;
+        }
+
+        .legend-box.today {
+            background: #f8f9fa;
+            border: 2px solid #333;
+            box-shadow: 0 0 0 3px #ffd700;
+        }
+
+        .contact-section {
+            text-align: center;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .contact-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .contact-info {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1em;
+            color: #666;
+            justify-content: center;
+        }
+
+        .contact-item strong {
+            color: #667eea;
+        }
+
+        .refresh-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            padding: 15px 25px;
+            border-radius: 50px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+
+        .refresh-button:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 7px 25px rgba(0,0,0,0.3);
+        }
+
+        @media (max-width: 768px) {
+            html {
+                overflow-x: hidden;
+                width: 100%;
+            }
+
+            body {
+                padding: 10px;
+                width: 100%;
+                max-width: 100vw;
+            }
+
+            .container {
+                width: 100%;
+                max-width: 100%;
+                padding: 0;
+            }
+
+            header {
+                margin-bottom: 20px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            .subtitle {
+                font-size: 0.9em;
+            }
+
+            .calendar-wrapper {
+                grid-template-columns: 1fr;
+                gap: 15px;
+                width: 100%;
+            }
+
+            .building-section {
+                padding: 15px;
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+            }
+
+            .building-badge {
+                width: 45px;
+                height: 45px;
+                font-size: 1.3em;
+                margin-right: 10px;
+            }
+
+            .building-info h2 {
+                font-size: 1.3em;
+            }
+
+            .building-info p {
+                font-size: 0.85em;
+            }
+
+            .month-nav {
+                padding: 10px 15px;
+            }
+
+            .month-nav button {
+                padding: 8px 12px;
+                font-size: 0.85em;
+            }
+
+            .current-month {
+                font-size: 1em;
+            }
+
+            .calendar {
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .calendar-header {
+                gap: 3px;
+            }
+
+            .day-name {
+                padding: 6px 4px;
+                font-size: 0.75em;
+            }
+
+            .calendar-grid {
+                gap: 3px;
+            }
+
+            .calendar-day {
+                min-height: 0;
+                padding: 4px 2px;
+            }
+
+            .calendar-day .date {
+                font-size: 0.85em;
+                margin-bottom: 2px;
+            }
+
+            .status-badge {
+                font-size: 1.4em;
+            }
+
+            .legend {
+                padding: 15px 10px;
+                gap: 15px;
+            }
+
+            .legend-item {
+                font-size: 0.85em;
+            }
+
+            .legend-box {
+                width: 22px;
+                height: 22px;
+            }
+
+            .contact-section {
+                padding: 20px 15px;
+            }
+
+            .contact-section h3 {
+                font-size: 1.2em;
+            }
+
+            .contact-info {
+                gap: 15px;
+                flex-direction: column;
+            }
+
+            .contact-item {
+                font-size: 0.95em;
+            }
+
+            .refresh-button {
+                bottom: 15px;
+                right: 15px;
+                padding: 10px 18px;
+                font-size: 0.85em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 id="pension-name">🏡 꿈꾸던하루 풀빌라펜션</h1>
+            <p class="subtitle">실시간 예약 현황을 확인하세요</p>
+        </header>
+
+        <div id="content">
+            <div class="loading">
+                <div style="font-size: 2em; margin-bottom: 15px;">⏳</div>
+                예약 현황을 불러오는 중입니다...
+            </div>
+        </div>
+    </div>
+
+    <button class="refresh-button" onclick="loadData()">🔄 새로고침</button>
+
+    <script>
+        // ⚠️ 여기에 Google Apps Script 웹 앱 URL을 입력하세요
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyHpUNX3LwkKCEwjKJTidwZDjLxJoM4vdoTj2-i5HhyW-JFnJ0nnir8rCnAFetEqQpz/exec';
+        
+        // 현재 표시 중인 연월
+        let currentDate = new Date();
+        
+        // 설정 정보 캐시 (한 번만 로드)
+        let cachedSettings = null;
+        
+        // 페이지 로드 시 데이터 불러오기
+        window.addEventListener('load', () => {
+            loadData();
+        });
+
+        /**
+         * 데이터 로드 (병렬 처리로 속도 개선)
+         */
+        async function loadData() {
+            // 로딩 표시
+            document.getElementById('content').innerHTML = `
+                <div class="loading">
+                    <div style="font-size: 2em; margin-bottom: 15px;">⏳</div>
+                    예약 현황을 불러오는 중입니다...
+                </div>
+            `;
+            
+            try {
+                // 설정 정보와 예약 현황을 동시에 로드 (병렬 처리)
+                const [settings, reservations] = await Promise.all([
+                    fetchSettings(),
+                    fetchReservations(
+                        currentDate.getFullYear(),
+                        currentDate.getMonth() + 1
+                    )
+                ]);
+                
+                // UI 렌더링
+                renderCalendar(reservations, settings);
+                
+            } catch (error) {
+                showError('데이터를 불러오는 중 오류가 발생했습니다: ' + error.message);
+            }
+        }
+
+        /**
+         * 설정 정보 가져오기 (캐싱)
+         */
+        async function fetchSettings() {
+            // 캐시된 설정이 있으면 바로 반환
+            if (cachedSettings) {
+                return cachedSettings;
+            }
+            
+            const response = await fetch(`${API_URL}?action=getSettings`);
+            const result = await response.json();
+            
+            if (result.status === 'error') {
+                throw new Error(result.message);
+            }
+            
+            // 설정 정보 캐시 저장
+            cachedSettings = result.data;
+            return result.data;
+        }
+
+        /**
+         * 예약 현황 가져오기
+         */
+        async function fetchReservations(year, month) {
+            const response = await fetch(`${API_URL}?action=getReservations&year=${year}&month=${month}`);
+            const result = await response.json();
+            
+            if (result.status === 'error') {
+                throw new Error(result.message);
+            }
+            
+            return result.data;
+        }
+
+        /**
+         * 캘린더 렌더링
+         */
+        function renderCalendar(reservations, settings) {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            // 펜션명 업데이트
+            if (settings['펜션명']) {
+                document.getElementById('pension-name').textContent = '🏡 ' + settings['펜션명'];
+            }
+            
+            const html = `
+                <div class="calendar-wrapper">
+                    ${renderBuilding('A', reservations.A, settings['A동_설명'] || '정원 6인 · 복층구조', year, month)}
+                    ${renderBuilding('B', reservations.B, settings['B동_설명'] || '정원 4인 · 원룸형', year, month)}
+                </div>
+                
+                <div class="legend">
+                    <div class="legend-item">
+                        <span style="font-size: 1.5em;">🟢</span>
+                        <span>예약 가능</span>
+                    </div>
+                    <div class="legend-item">
+                        <span style="font-size: 1.5em;">🔴</span>
+                        <span>예약 완료</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-box today"></div>
+                        <span>오늘</span>
+                    </div>
+                </div>
+                
+                <div class="contact-section">
+                    <h3>📞 예약 문의</h3>
+                    <div class="contact-info">
+                        <div class="contact-item">
+                            <span>전화:</span>
+                            <strong>${settings['전화번호'] || '010-1234-5678'}</strong>
+                        </div>
+                        <div class="contact-item">
+                            <span>카카오톡:</span>
+                            <strong>${settings['카카오톡'] || '@힐링스테이'}</strong>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('content').innerHTML = html;
+        }
+
+        /**
+         * 각 동의 캘린더 렌더링
+         */
+        function renderBuilding(building, reservationList, description, year, month) {
+            const monthName = `${year}년 ${month + 1}월`;
+            const calendarDays = generateCalendarDays(year, month, reservationList, building);
+            
+            return `
+                <div class="building-section building-${building.toLowerCase()}">
+                    <div class="building-header">
+                        <div class="building-badge">${building}</div>
+                        <div class="building-info">
+                            <h2>${building}동</h2>
+                            <p>${description}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="month-nav">
+                        <button onclick="changeMonth(-1)">◀ 이전</button>
+                        <div class="current-month">${monthName}</div>
+                        <button onclick="changeMonth(1)">다음 ▶</button>
+                    </div>
+                    
+                    <div class="calendar">
+                        <div class="calendar-header">
+                            <div class="day-name sunday">일</div>
+                            <div class="day-name">월</div>
+                            <div class="day-name">화</div>
+                            <div class="day-name">수</div>
+                            <div class="day-name">목</div>
+                            <div class="day-name">금</div>
+                            <div class="day-name saturday">토</div>
+                        </div>
+                        <div class="calendar-grid">
+                            ${calendarDays}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * 캘린더 날짜 생성
+         */
+        function generateCalendarDays(year, month, reservationList, building) {
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDay = firstDay.getDay(); // 0 (일요일) ~ 6 (토요일)
+            const totalDays = lastDay.getDate();
+            
+            // 예약 데이터를 맵으로 변환 (빠른 검색)
+            const reservationMap = {};
+            reservationList.forEach(res => {
+                reservationMap[res.date] = res;
+            });
+            
+            // 오늘 날짜
+            const today = new Date();
+            const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            
+            let html = '';
+            
+            // 이전 달 빈 칸
+            const prevMonth = month === 0 ? 11 : month - 1;
+            const prevYear = month === 0 ? year - 1 : year;
+            const prevLastDay = new Date(prevYear, prevMonth + 1, 0).getDate();
+            
+            for (let i = startDay - 1; i >= 0; i--) {
+                const day = prevLastDay - i;
+                html += `<div class="calendar-day other-month"><div class="date">${day}</div></div>`;
+            }
+            
+            // 현재 달 날짜
+            for (let day = 1; day <= totalDays; day++) {
+                const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const dayOfWeek = new Date(year, month, day).getDay();
+                
+                // 예약 상태 확인
+                const reservation = reservationMap[dateString];
+                const isBooked = reservation && (reservation.status === '예약완료' || reservation.status === 'booked');
+                const isToday = dateString === todayString;
+                
+                let classes = 'calendar-day';
+                if (dayOfWeek === 0) classes += ' sunday';
+                if (dayOfWeek === 6) classes += ' saturday';
+                if (isBooked) classes += ' booked';
+                else classes += ' available';
+                if (isToday) classes += ' today';
+                
+                const statusText = isBooked ? '예약완료' : '예약가능';
+                const memo = reservation ? reservation.memo : '';
+                
+                html += `
+                    <div class="${classes}" onclick="showDateInfo('${building}', '${dateString}', '${statusText}', '${memo}')">
+                        <div class="date">${day}</div>
+                        <div class="status-badge"></div>
+                    </div>
+                `;
+            }
+            
+            // 다음 달 빈 칸
+            const remainingDays = 7 - ((startDay + totalDays) % 7);
+            if (remainingDays < 7) {
+                for (let day = 1; day <= remainingDays; day++) {
+                    html += `<div class="calendar-day other-month"><div class="date">${day}</div></div>`;
+                }
+            }
+            
+            return html;
+        }
+
+        /**
+         * 월 변경
+         */
+        function changeMonth(direction) {
+            currentDate.setMonth(currentDate.getMonth() + direction);
+            loadData();
+        }
+
+        /**
+         * 날짜 클릭 시 상세 정보 표시
+         */
+        function showDateInfo(building, date, status, memo) {
+            const dateObj = new Date(date);
+            const formatted = `${dateObj.getFullYear()}년 ${dateObj.getMonth() + 1}월 ${dateObj.getDate()}일`;
+            
+            // 예약 가능한 경우
+            if (status === '예약가능') {
+                const reservationUrl = building === 'A' 
+                    ? 'https://naver.me/FdGZZvsZ' 
+                    : 'https://naver.me/xZORerIW';
+                
+                if (confirm(`${building}동\n${formatted}\n\n✅ 예약 가능합니다!\n\n예약 페이지로 이동하시겠습니까?`)) {
+                    window.open(reservationUrl, '_blank');
+                }
+            } 
+            // 예약 완료인 경우
+            else {
+                alert(`${building}동\n${formatted}\n\n🔴 예약 완료`);
+            }
+        }
+
+        /**
+         * 에러 표시
+         */
+        function showError(message) {
+            document.getElementById('content').innerHTML = `
+                <div class="error">
+                    <h3>⚠️ 오류 발생</h3>
+                    <p>${message}</p>
+                    <p style="margin-top: 10px; font-size: 0.9em;">
+                        Google Apps Script URL이 올바르게 설정되었는지 확인해주세요.
+                    </p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
