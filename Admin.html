@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>관리자 - 펜션 예약 관리</title>
+    <title>관리자 - 펜션 예약 관리 2</title>
     <style>
         * {
             margin: 0;
@@ -277,14 +277,14 @@
         }
 
         .calendar-day.past {
-            background: #e0e0e0;
-            border-color: #bdbdbd;
+            background: #ffffff;
+            border-color: #e0e0e0;
             opacity: 0.6;
             cursor: default;
         }
 
         .calendar-day.past:hover {
-            background: #e0e0e0;
+            background: #ffffff;
             transform: none;
         }
 
@@ -293,27 +293,27 @@
         }
 
         .calendar-day.available {
-            background: #e3f2fd;
-            border-color: #2196f3;
+            background: #bbe0eb;
+            border-color: #bbe0eb;
             cursor: pointer;
         }
 
         .calendar-day.available:hover {
-            background: #bbdefb;
+            background: #a0d0df;
             transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+            box-shadow: 0 4px 12px rgba(187, 224, 235, 0.5);
         }
 
         .calendar-day.booked {
-            background: #ffebee;
-            border-color: #f44336;
+            background: #fad2e3;
+            border-color: #fad2e3;
             cursor: pointer;
         }
 
         .calendar-day.booked:hover {
-            background: #ffcdd2;
+            background: #f5b8d3;
             transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+            box-shadow: 0 4px 12px rgba(250, 210, 227, 0.5);
         }
 
         .calendar-day.today {
@@ -321,16 +321,7 @@
         }
 
         .status-badge {
-            font-size: 1.2em;
-            line-height: 1;
-        }
-
-        .available .status-badge::before {
-            content: '🔵';
-        }
-
-        .booked .status-badge::before {
-            content: '🔴';
+            display: none;
         }
 
         .legend {
@@ -359,13 +350,13 @@
         }
 
         .legend-box.available {
-            background: #e3f2fd;
-            border-color: #2196f3;
+            background: #bbe0eb;
+            border-color: #bbe0eb;
         }
 
         .legend-box.booked {
-            background: #ffebee;
-            border-color: #f44336;
+            background: #fad2e3;
+            border-color: #fad2e3;
         }
 
         .legend-box.today {
@@ -576,7 +567,6 @@
 
             <div id="content">
                 <div class="loading">
-                    <div style="font-size: 2em; margin-bottom: 15px;">🔵</div>
                     예약 현황을 불러오는 중입니다...
                 </div>
             </div>
@@ -587,9 +577,8 @@
     </div>
 
     <script>
-        // ⚠️ 설정 부분 - 여기를 수정하세요
-        const ADMIN_PASSWORD = '0550';  // 비밀번호 변경
-        const API_URL = 'https://script.google.com/macros/s/AKfycbyHpUNX3LwkKCEwjKJTidwZDjLxJoM4vdoTj2-i5HhyW-JFnJ0nnir8rCnAFetEqQpz/exec';  // API URL 입력
+        // ⚠️ 설정 부분 - API URL만 입력하세요
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyHpUNX3LwkKCEwjKJTidwZDjLxJoM4vdoTj2-i5HhyW-JFnJ0nnir8rCnAFetEqQpz/exec';
         
         // 현재 표시 중인 연월
         let currentDate = new Date();
@@ -600,21 +589,34 @@
         /**
          * 로그인
          */
-        function login() {
+        async function login() {
             const password = document.getElementById('password-input').value;
             const errorDiv = document.getElementById('login-error');
             
-            if (password === ADMIN_PASSWORD) {
-                // 로그인 성공
-                sessionStorage.setItem('admin_logged_in', 'true');
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('admin-content').style.display = 'block';
-                loadData();
-            } else {
-                // 로그인 실패
-                errorDiv.textContent = '비밀번호가 올바르지 않습니다.';
-                document.getElementById('password-input').value = '';
-                document.getElementById('password-input').focus();
+            if (!password) {
+                errorDiv.textContent = '비밀번호를 입력하세요.';
+                return;
+            }
+            
+            try {
+                // 서버에 비밀번호 확인 요청
+                const response = await fetch(`${API_URL}?action=checkPassword&password=${encodeURIComponent(password)}`);
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    // 로그인 성공
+                    sessionStorage.setItem('admin_logged_in', 'true');
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('admin-content').style.display = 'block';
+                    loadData();
+                } else {
+                    // 로그인 실패
+                    errorDiv.textContent = result.message || '비밀번호가 올바르지 않습니다.';
+                    document.getElementById('password-input').value = '';
+                    document.getElementById('password-input').focus();
+                }
+            } catch (error) {
+                errorDiv.textContent = '로그인 중 오류가 발생했습니다: ' + error.message;
             }
         }
 
@@ -647,7 +649,6 @@
         async function loadData() {
             document.getElementById('content').innerHTML = `
                 <div class="loading">
-                    <div style="font-size: 2em; margin-bottom: 15px;">🔵</div>
                     예약 현황을 불러오는 중입니다...
                 </div>
             `;
@@ -771,11 +772,11 @@
                 
                 <div class="legend">
                     <div class="legend-item">
-                        <span style="font-size: 1.5em;">🔵</span>
+                        <div class="legend-box available"></div>
                         <span>예약 가능 (클릭하여 예약 추가)</span>
                     </div>
                     <div class="legend-item">
-                        <span style="font-size: 1.5em;">🔴</span>
+                        <div class="legend-box booked"></div>
                         <span>예약 완료 (클릭하여 예약 취소)</span>
                     </div>
                     <div class="legend-item">
@@ -931,6 +932,4 @@
         }
     </script>
 </body>
-
 </html>
-
