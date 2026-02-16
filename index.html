@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>펜션 예약 현황 8</title>
+    <title>펜션 예약 현황 9</title>
     <style>
         * {
             margin: 0;
@@ -227,14 +227,14 @@
         }
 
         .calendar-day.past {
-            background: #e0e0e0;
-            border-color: #bdbdbd;
+            background: #ffffff;
+            border-color: #e0e0e0;
             opacity: 0.6;
             cursor: default;
         }
 
         .calendar-day.past:hover {
-            background: #e0e0e0;
+            background: #ffffff;
             transform: none;
         }
 
@@ -243,19 +243,19 @@
         }
 
         .calendar-day.available {
-            background: #e3f2fd;
-            border-color: #2196f3;
+            background: #bbe0eb;
+            border-color: #bbe0eb;
             cursor: pointer;
         }
 
         .calendar-day.available:hover {
-            background: #bbdefb;
+            background: #a0d0df;
             transform: scale(1.05);
         }
 
         .calendar-day.booked {
-            background: #ffebee;
-            border-color: #f44336;
+            background: #fad2e3;
+            border-color: #fad2e3;
             cursor: default;
         }
 
@@ -264,16 +264,7 @@
         }
 
         .status-badge {
-            font-size: 1.2em;
-            line-height: 1;
-        }
-
-        .available .status-badge::before {
-            content: '🔵';
-        }
-
-        .booked .status-badge::before {
-            content: '🔴';
+            display: none;
         }
 
         .legend {
@@ -302,13 +293,13 @@
         }
 
         .legend-box.available {
-            background: #e3f2fd;
-            border-color: #2196f3;
+            background: #bbe0eb;
+            border-color: #bbe0eb;
         }
 
         .legend-box.booked {
-            background: #ffebee;
-            border-color: #f44336;
+            background: #fad2e3;
+            border-color: #fad2e3;
         }
 
         .legend-box.today {
@@ -529,7 +520,6 @@
 
         <div id="content">
             <div class="loading">
-                <div style="font-size: 2em; margin-bottom: 15px;">🔵</div>
                 예약 현황을 불러오는 중입니다...
             </div>
         </div>
@@ -559,7 +549,6 @@
             // 로딩 표시
             document.getElementById('content').innerHTML = `
                 <div class="loading">
-                    <div style="font-size: 2em; margin-bottom: 15px;">🔵</div>
                     예약 현황을 불러오는 중입니다...
                 </div>
             `;
@@ -637,11 +626,11 @@
                 
                 <div class="legend">
                     <div class="legend-item">
-                        <span style="font-size: 1.5em;">🔵</span>
+                        <div class="legend-box available"></div>
                         <span>예약 가능</span>
                     </div>
                     <div class="legend-item">
-                        <span style="font-size: 1.5em;">🔴</span>
+                        <div class="legend-box booked"></div>
                         <span>예약 완료</span>
                     </div>
                     <div class="legend-item">
