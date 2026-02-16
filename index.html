@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>펜션 예약 현황</title>
+    <title>펜션 예약 현황 8</title>
     <style>
         * {
             margin: 0;
@@ -40,6 +40,12 @@
         .subtitle {
             font-size: 1.1em;
             opacity: 0.95;
+        }
+
+        .info-text {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 10px;
         }
 
         .loading {
@@ -239,6 +245,7 @@
         .calendar-day.available {
             background: #e3f2fd;
             border-color: #2196f3;
+            cursor: pointer;
         }
 
         .calendar-day.available:hover {
@@ -249,6 +256,7 @@
         .calendar-day.booked {
             background: #ffebee;
             border-color: #f44336;
+            cursor: default;
         }
 
         .calendar-day.today {
@@ -516,6 +524,7 @@
         <header>
             <h1 id="pension-name">🏡 꿈꾸던하루 풀빌라펜션</h1>
             <p class="subtitle">실시간 예약 현황</p>
+            <p class="info-text">숙박 금액 정보는 예약 가능일을 클릭 후 확인해 주세요.</p>
         </header>
 
         <div id="content">
@@ -778,8 +787,16 @@
                 const statusText = isBooked ? '예약완료' : '예약가능';
                 const memo = reservation ? reservation.memo : '';
                 
-                // 과거 날짜는 클릭 불가
-                const onclickEvent = isPast ? '' : `onclick="showDateInfo('${building}', '${dateString}', '${statusText}', '${memo}')"`;
+                // 클릭 이벤트 설정
+                let onclickEvent = '';
+                if (!isPast && !isBooked) {
+                    // 예약 가능일: 바로 새 창으로 링크 이동
+                    const reservationUrl = building === 'A' 
+                        ? 'https://m.booking.naver.com/booking/3/bizes/841062/items/4853137?theme=place&lang=ko&area=ple' 
+                        : 'https://m.booking.naver.com/booking/3/bizes/841062/items/4853141?theme=place&lang=ko&area=ple';
+                    onclickEvent = `onclick="window.open('${reservationUrl}', '_blank')"`;
+                }
+                // 과거 날짜 또는 예약 완료일은 클릭 불가 (onclickEvent = '')
                 
                 html += `
                     <div class="${classes}" ${onclickEvent}>
