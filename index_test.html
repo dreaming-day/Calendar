@@ -4,6 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>펜션 예약 현황</title>
+    
+    <!-- ============================================================ -->
+    <!-- ⚠️⚠️⚠️ 여기에 Google Apps Script 웹 앱 URL을 입력하세요 ⚠️⚠️⚠️ -->
+    <!-- ============================================================ -->
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyHpUNX3LwkKCEwjKJTidwZDjLxJoM4vdoTj2-i5HhyW-JFnJ0nnir8rCnAFetEqQpz/exec';
+        
+        // 예약 링크 URL
+        const RESERVATION_URLS = {
+            A: 'https://m.booking.naver.com/booking/3/bizes/841062/items/4853137?theme=place&lang=ko&area=ple',
+            B: 'https://m.booking.naver.com/booking/3/bizes/841062/items/4853141?theme=place&lang=ko&area=ple'
+        };
+    </script>
+    <!-- ============================================================ -->
+    
     <style>
         * {
             margin: 0;
@@ -18,6 +33,94 @@
             padding: 20px;
             overflow-x: hidden;
             width: 100%;
+        }
+
+        /* 설정 화면 */
+        .setup-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
+        }
+
+        .setup-box {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .setup-box h2 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .setup-box .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .setup-box label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .setup-box input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            margin-bottom: 20px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .setup-box input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .setup-box button {
+            width: 100%;
+            padding: 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .setup-box button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .setup-box .help-text {
+            font-size: 0.9em;
+            color: #999;
+            margin-top: -15px;
+            margin-bottom: 20px;
+        }
+
+        .error-message {
+            color: #d32f2f;
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+
+        /* 메인 컨텐츠 */
+        #main-content {
+            display: none;
         }
 
         .container {
@@ -143,17 +246,18 @@
         }
 
         .calendar-day {
-            min-height: 80px;
+            min-height: 90px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
             border-radius: 12px;
-            padding: 8px 4px;
+            padding: 10px 6px;
             transition: all 0.3s;
             position: relative;
             border: 2px solid transparent;
             background: #f8f9fa;
+            cursor: pointer;
         }
 
         .calendar-day.other-month {
@@ -161,10 +265,10 @@
         }
 
         .calendar-day .date {
-            font-size: 1.1em;
+            font-size: 1.2em;
             font-weight: 600;
             color: #333;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }
 
         .calendar-day.sunday .date {
@@ -179,6 +283,7 @@
             background: #ffffff;
             border-color: #e0e0e0;
             opacity: 0.6;
+            cursor: default;
         }
 
         .calendar-day.partial-available {
@@ -187,45 +292,82 @@
         }
 
         .calendar-day.fully-booked {
-            background: #fad2e3;
-            border-color: #fad2e3;
+            background: #ffffff;
+            border-color: #e0e0e0;
+            opacity: 0.6;
+            cursor: default;
         }
 
-        .calendar-day.today {
-            box-shadow: 0 0 0 3px #ffd700;
-        }
-
-        .building-status {
-            font-size: 0.75em;
-            line-height: 1.4;
-            text-align: center;
-            width: 100%;
-        }
-
-        .building-line {
+        .building-badges {
             display: flex;
+            gap: 4px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            margin: 2px 0;
-        }
-
-        .building-label {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.7em;
             font-weight: 600;
-            margin-right: 4px;
-        }
-
-        .status-link {
-            color: #0066cc;
-            text-decoration: none;
+            transition: all 0.2s;
             cursor: pointer;
+            text-decoration: none;
         }
 
-        .status-link:hover {
-            text-decoration: underline;
+        .badge.available {
+            background: #ffffff;
+            color: #0066cc;
+            border: 1.5px solid #0066cc;
         }
 
-        .status-text {
-            color: #666;
+        .badge.available:hover {
+            background: #0066cc;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .badge.booked {
+            background: #f5f5f5;
+            color: #999;
+            border: 1.5px solid #ddd;
+            cursor: default;
+        }
+
+        /* 툴팁 스타일 */
+        .tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.75em;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            z-index: 1000;
+            margin-bottom: 8px;
+        }
+
+        .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: rgba(0, 0, 0, 0.9);
+        }
+
+        .badge:hover .tooltip {
+            opacity: 1;
         }
 
         .legend {
@@ -401,17 +543,22 @@
             }
 
             .calendar-day {
-                min-height: 65px;
-                padding: 4px 2px;
+                min-height: 75px;
+                padding: 6px 4px;
             }
 
             .calendar-day .date {
-                font-size: 0.95em;
-                margin-bottom: 4px;
+                font-size: 1em;
+                margin-bottom: 6px;
             }
 
-            .building-status {
+            .building-badges {
+                gap: 3px;
+            }
+
+            .badge {
                 font-size: 0.65em;
+                padding: 4px 10px;
             }
 
             .legend {
@@ -459,6 +606,7 @@
         <header>
             <h1 id="pension-name">🏡 꿈꾸던하루 풀빌라펜션</h1>
             <p class="subtitle">실시간 예약 현황</p>
+            <p class="info-text">꿈꾸던하루펜션은 A동과 B동이 있습니다.</p>
             <p class="info-text">숙박 금액 정보는 예약 가능일을 클릭 후 확인해 주세요.</p>
         </header>
 
@@ -472,20 +620,11 @@
     <button class="refresh-button" onclick="loadData()">🔄 새로고침</button>
 
     <script>
-        // ⚠️ 여기에 Google Apps Script 웹 앱 URL을 입력하세요
-        const API_URL = 'https://script.google.com/macros/s/AKfycbyHpUNX3LwkKCEwjKJTidwZDjLxJoM4vdoTj2-i5HhyW-JFnJ0nnir8rCnAFetEqQpz/exec';
-        
         // 현재 표시 중인 연월
         let currentDate = new Date();
         
         // 설정 정보 캐시
         let cachedSettings = null;
-        
-        // 예약 링크
-        const RESERVATION_URLS = {
-            A: 'https://m.booking.naver.com/booking/3/bizes/841062/items/4853137?theme=place&lang=ko&area=ple',
-            B: 'https://m.booking.naver.com/booking/3/bizes/841062/items/4853141?theme=place&lang=ko&area=ple'
-        };
         
         // 페이지 로드 시 데이터 불러오기
         window.addEventListener('load', () => {
@@ -591,16 +730,12 @@
                 
                 <div class="legend">
                     <div class="legend-item">
-                        <div class="legend-box available"></div>
+                        <span class="badge available" style="pointer-events: none;">A</span>
                         <span>예약 가능</span>
                     </div>
                     <div class="legend-item">
-                        <div class="legend-box booked"></div>
-                        <span>모두 예약 완료</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-box today"></div>
-                        <span>오늘</span>
+                        <span class="badge booked" style="pointer-events: none;">A</span>
+                        <span>예약 완료</span>
                     </div>
                 </div>
                 
@@ -680,7 +815,6 @@
                 currentDateObj.setHours(0, 0, 0, 0);
                 
                 const isPast = currentDateObj < today;
-                const isToday = dateString === todayString;
                 
                 // A동, B동 예약 상태 확인
                 const reservationA = reservationMapA[dateString];
@@ -694,7 +828,7 @@
                 if (dayOfWeek === 6) classes += ' saturday';
                 
                 if (!isPast) {
-                    // 둘 다 예약 완료 → 분홍색
+                    // 둘 다 예약 완료 → 흰색 (과거 날짜와 동일)
                     if (isBookedA && isBookedB) {
                         classes += ' fully-booked';
                     } 
@@ -706,29 +840,36 @@
                     classes += ' past';
                 }
                 
-                if (isToday) classes += ' today';
-                
-                // 상태 HTML 생성
+                // 상태 HTML 생성 (뱃지 스타일)
                 let statusHTML = '';
                 if (!isPast) {
-                    statusHTML = `
-                        <div class="building-status">
-                            <div class="building-line">
-                                <span class="building-label">A:</span>
-                                ${isBookedA 
-                                    ? '<span class="status-text">예약완료</span>' 
-                                    : `<a href="${RESERVATION_URLS.A}" target="_blank" class="status-link">예약가능</a>`
-                                }
-                            </div>
-                            <div class="building-line">
-                                <span class="building-label">B:</span>
-                                ${isBookedB 
-                                    ? '<span class="status-text">예약완료</span>' 
-                                    : `<a href="${RESERVATION_URLS.B}" target="_blank" class="status-link">예약가능</a>`
-                                }
-                            </div>
-                        </div>
-                    `;
+                    const badgesHTML = [];
+                    
+                    // A동 뱃지
+                    if (isBookedA) {
+                        badgesHTML.push(`<span class="badge booked">A</span>`);
+                    } else {
+                        badgesHTML.push(`
+                            <a href="${RESERVATION_URLS.A}" target="_blank" class="badge available">
+                                A
+                                <span class="tooltip">A동 예약하기</span>
+                            </a>
+                        `);
+                    }
+                    
+                    // B동 뱃지
+                    if (isBookedB) {
+                        badgesHTML.push(`<span class="badge booked">B</span>`);
+                    } else {
+                        badgesHTML.push(`
+                            <a href="${RESERVATION_URLS.B}" target="_blank" class="badge available">
+                                B
+                                <span class="tooltip">B동 예약하기</span>
+                            </a>
+                        `);
+                    }
+                    
+                    statusHTML = `<div class="building-badges">${badgesHTML.join('')}</div>`;
                 }
                 
                 html += `
