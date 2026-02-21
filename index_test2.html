@@ -189,13 +189,10 @@
         }
 
         .calendar-day.fully-booked {
-            background: #fad2e3;
-            border-color: #fad2e3;
+            background: #ffffff;
+            border-color: #e0e0e0;
+            opacity: 0.6;
             cursor: default;
-        }
-
-        .calendar-day.today {
-            box-shadow: 0 0 0 3px #ffd700;
         }
 
         .building-badges {
@@ -639,16 +636,12 @@
                 
                 <div class="legend">
                     <div class="legend-item">
-                        <div class="legend-box available"></div>
-                        <span>예약 가능</span>
+                        <span class="badge available" style="pointer-events: none;">A</span>
+                        <span>예약 가능 (파란 테두리)</span>
                     </div>
                     <div class="legend-item">
-                        <div class="legend-box booked"></div>
-                        <span>모두 예약 완료</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-box today"></div>
-                        <span>오늘</span>
+                        <span class="badge booked" style="pointer-events: none;">A</span>
+                        <span>예약 완료 (회색 테두리)</span>
                     </div>
                 </div>
                 
@@ -728,7 +721,6 @@
                 currentDateObj.setHours(0, 0, 0, 0);
                 
                 const isPast = currentDateObj < today;
-                const isToday = dateString === todayString;
                 
                 // A동, B동 예약 상태 확인
                 const reservationA = reservationMapA[dateString];
@@ -742,7 +734,7 @@
                 if (dayOfWeek === 6) classes += ' saturday';
                 
                 if (!isPast) {
-                    // 둘 다 예약 완료 → 분홍색
+                    // 둘 다 예약 완료 → 흰색 (과거 날짜와 동일)
                     if (isBookedA && isBookedB) {
                         classes += ' fully-booked';
                     } 
@@ -753,8 +745,6 @@
                 } else {
                     classes += ' past';
                 }
-                
-                if (isToday) classes += ' today';
                 
                 // 상태 HTML 생성 (뱃지 스타일)
                 let statusHTML = '';
