@@ -3,7 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>관리자 - 펜션 예약 관리 2</title>
+    <title>관리자 - 펜션 예약 관리</title>
+    
+    <!-- ============================================================ -->
+    <!-- ⚠️⚠️⚠️ 여기에 Google Apps Script 웹 앱 URL을 입력하세요 ⚠️⚠️⚠️ -->
+    <!-- ============================================================ -->
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyHpUNX3LwkKCEwjKJTidwZDjLxJoM4vdoTj2-i5HhyW-JFnJ0nnir8rCnAFetEqQpz/exec';
+        
+        // 예약 링크 URL
+        const RESERVATION_URLS = {
+            A: 'https://m.booking.naver.com/booking/3/bizes/841062/items/4853137?theme=place&lang=ko&area=ple',
+            B: 'https://m.booking.naver.com/booking/3/bizes/841062/items/4853141?theme=place&lang=ko&area=ple'
+        };
+    </script>
+    <!-- ============================================================ -->
+    
     <style>
         * {
             margin: 0;
@@ -89,13 +104,101 @@
             font-size: 0.9em;
         }
 
-        /* 관리자 화면 */
-        #admin-content {
+        /* 메인 컨텐츠 */
+        #main-content {
+            display: none;
+        }
+
+        /* 설정 화면 */
+        .setup-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
+        }
+
+        .setup-box {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .setup-box h2 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .setup-box .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .setup-box label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .setup-box input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            margin-bottom: 20px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .setup-box input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .setup-box button {
+            width: 100%;
+            padding: 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .setup-box button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .setup-box .help-text {
+            font-size: 0.9em;
+            color: #999;
+            margin-top: -15px;
+            margin-bottom: 20px;
+        }
+
+        .error-message {
+            color: #d32f2f;
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+
+        /* 메인 컨텐츠 */
+        #main-content {
             display: none;
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 900px;
             width: 100%;
             margin: 0 auto;
         }
@@ -111,11 +214,9 @@
             margin-bottom: 10px;
         }
 
-        .admin-badge {
-            font-size: 1.3em;
-            color: #d32f2f;
-            font-weight: 700;
-            margin-top: 10px;
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.95;
         }
 
         .info-text {
@@ -140,39 +241,14 @@
             text-align: center;
         }
 
-        .calendar-wrapper {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(min(100%, 600px), 1fr));
-            gap: 30px;
-            margin-bottom: 30px;
-        }
-
-        .building-section {
+        .calendar-section {
             background: white;
             border-radius: 20px;
             padding: 30px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
             width: 100%;
             max-width: 100%;
-        }
-
-        .building-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 3px solid #f0f0f0;
-        }
-
-        .building-info h2 {
-            font-size: 1.8em;
-            color: #333;
-            margin-bottom: 5px;
-        }
-
-        .building-info p {
-            color: #666;
-            font-size: 0.95em;
+            margin-bottom: 30px;
         }
 
         .month-nav {
@@ -244,17 +320,18 @@
         }
 
         .calendar-day {
-            aspect-ratio: 1;
+            min-height: 90px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            border-radius: 12px;
-            cursor: pointer;
+            justify-content: flex-start;
+            border-radius: 0;
+            padding: 10px 6px;
             transition: all 0.3s;
             position: relative;
             border: 2px solid transparent;
             background: #f8f9fa;
+            cursor: pointer;
         }
 
         .calendar-day.other-month {
@@ -262,10 +339,10 @@
         }
 
         .calendar-day .date {
-            font-size: 1.1em;
+            font-size: 1.2em;
             font-weight: 600;
             color: #333;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
         }
 
         .calendar-day.sunday .date {
@@ -283,45 +360,96 @@
             cursor: default;
         }
 
-        .calendar-day.past:hover {
+        .calendar-day.partial-available {
             background: #ffffff;
-            transform: none;
+            border-color: #e0e0e0;
         }
 
-        .calendar-day.past .status-badge {
-            display: none;
+        .calendar-day.fully-booked {
+            background: #ffffff;
+            border-color: #e0e0e0;
+            opacity: 0.6;
+            cursor: default;
         }
 
-        .calendar-day.available {
+        .building-badges {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            border-radius: 0;
+            font-size: 0.75em;
+            font-weight: 600;
+            transition: all 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .badge.available {
             background: #bbe0eb;
-            border-color: #bbe0eb;
-            cursor: pointer;
+            color: #333;
+            border: 1.5px solid #bbe0eb;
         }
 
-        .calendar-day.available:hover {
+        .badge.available:hover {
             background: #a0d0df;
+            border-color: #a0d0df;
+            color: #333;
             transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(187, 224, 235, 0.5);
         }
 
-        .calendar-day.booked {
-            background: #fad2e3;
-            border-color: #fad2e3;
+        .badge.booked {
+            background: #f5f5f5;
+            color: #999;
+            border: 1.5px solid #ddd;
             cursor: pointer;
         }
 
-        .calendar-day.booked:hover {
-            background: #f5b8d3;
+        .badge.booked:hover {
+            background: #e0e0e0;
             transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(250, 210, 227, 0.5);
         }
 
-        .calendar-day.today {
-            box-shadow: 0 0 0 3px #ffd700;
+        /* 툴팁 스타일 */
+        .tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.75em;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            z-index: 1000;
+            margin-bottom: 8px;
         }
 
-        .status-badge {
-            display: none;
+        .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: rgba(0, 0, 0, 0.9);
+        }
+
+        .badge:hover .tooltip {
+            opacity: 1;
         }
 
         .legend {
@@ -363,6 +491,42 @@
             background: #f8f9fa;
             border: 2px solid #333;
             box-shadow: 0 0 0 3px #ffd700;
+        }
+
+        .contact-section {
+            text-align: center;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .contact-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .contact-info {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1em;
+            color: #666;
+            justify-content: center;
+        }
+
+        .contact-item strong {
+            color: #333;
         }
 
         .refresh-button {
@@ -411,10 +575,6 @@
         }
 
         @media (max-width: 768px) {
-            .login-box {
-                padding: 30px 20px;
-            }
-
             html {
                 overflow-x: hidden;
                 width: 100%;
@@ -440,33 +600,19 @@
                 font-size: 1.5em;
             }
 
-            .admin-badge {
-                font-size: 1em;
+            .subtitle {
+                font-size: 0.9em;
             }
 
             .info-text {
                 font-size: 0.8em;
             }
 
-            .calendar-wrapper {
-                grid-template-columns: 1fr;
-                gap: 15px;
-                width: 100%;
-            }
-
-            .building-section {
+            .calendar-section {
                 padding: 15px;
                 width: 100%;
                 max-width: 100%;
                 box-sizing: border-box;
-            }
-
-            .building-info h2 {
-                font-size: 1.3em;
-            }
-
-            .building-info p {
-                font-size: 0.85em;
             }
 
             .month-nav {
@@ -501,17 +647,23 @@
             }
 
             .calendar-day {
-                min-height: 0;
-                padding: 4px 2px;
+                min-height: 75px;
+                padding: 6px 4px;
             }
 
             .calendar-day .date {
-                font-size: 0.85em;
-                margin-bottom: 2px;
+                font-size: 1em;
+                margin-bottom: 6px;
             }
 
-            .status-badge {
-                font-size: 1.4em;
+            .building-badges {
+                gap: 3px;
+            }
+
+            .badge {
+                width: 24px;
+                height: 24px;
+                font-size: 0.7em;
             }
 
             .legend {
@@ -528,18 +680,35 @@
                 height: 22px;
             }
 
-            .refresh-button, .logout-button {
+            .contact-section {
+                padding: 20px 15px;
+            }
+
+            .contact-section h3 {
+                font-size: 1.2em;
+            }
+
+            .contact-info {
+                gap: 15px;
+                flex-direction: column;
+            }
+
+            .contact-item {
+                font-size: 0.95em;
+            }
+
+            .refresh-button {
                 bottom: 15px;
+                right: 15px;
                 padding: 10px 18px;
                 font-size: 0.85em;
             }
 
             .logout-button {
+                bottom: 15px;
                 left: 15px;
-            }
-
-            .refresh-button {
-                right: 15px;
+                padding: 10px 18px;
+                font-size: 0.85em;
             }
         }
     </style>
@@ -557,29 +726,25 @@
     </div>
 
     <!-- 관리자 화면 -->
-    <div id="admin-content">
-        <div class="container">
-            <header>
-                <h1 id="pension-name">🏡 꿈꾸던하루 풀빌라펜션</h1>
-                <p class="admin-badge">🔒 관리자 화면</p>
-                <p class="info-text">예약 가능일 클릭 → 예약 추가 | 예약 완료일 클릭 → 예약 취소</p>
-            </header>
+    <div id="main-content">
+    <div class="container">
+        <header>
+            <h1 id="pension-name">🏡 꿈꾸던하루 풀빌라펜션</h1>
+            <p class="subtitle" style="color: #d32f2f; font-weight: 700;">🔒 관리자 화면</p>
+            <p class="info-text">예약 가능일 클릭 → 예약 추가 | 예약 완료일 클릭 → 예약 취소</p>
+        </header>
 
-            <div id="content">
-                <div class="loading">
-                    예약 현황을 불러오는 중입니다...
-                </div>
+        <div id="content">
+            <div class="loading">
+                예약 현황을 불러오는 중입니다...
             </div>
         </div>
-
-        <button class="logout-button" onclick="logout()">🚪 로그아웃</button>
-        <button class="refresh-button" onclick="loadData()">🔄 새로고침</button>
     </div>
 
+    <button class="logout-button" onclick="logout()">🚪 로그아웃</button>
+    <button class="refresh-button" onclick="loadData()">🔄 새로고침</button>
+
     <script>
-        // ⚠️ 설정 부분 - API URL만 입력하세요
-        const API_URL = 'https://script.google.com/macros/s/AKfycbyHpUNX3LwkKCEwjKJTidwZDjLxJoM4vdoTj2-i5HhyW-JFnJ0nnir8rCnAFetEqQpz/exec';
-        
         // 현재 표시 중인 연월
         let currentDate = new Date();
         
@@ -607,7 +772,7 @@
                     // 로그인 성공
                     sessionStorage.setItem('admin_logged_in', 'true');
                     document.getElementById('login-screen').style.display = 'none';
-                    document.getElementById('admin-content').style.display = 'block';
+                    document.getElementById('main-content').style.display = 'block';
                     loadData();
                 } else {
                     // 로그인 실패
@@ -636,7 +801,7 @@
         window.addEventListener('load', () => {
             if (sessionStorage.getItem('admin_logged_in') === 'true') {
                 document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('admin-content').style.display = 'block';
+                document.getElementById('main-content').style.display = 'block';
                 loadData();
             } else {
                 document.getElementById('password-input').focus();
@@ -764,47 +929,11 @@
                 document.getElementById('pension-name').textContent = '🏡 ' + settings['펜션명'];
             }
             
-            const html = `
-                <div class="calendar-wrapper">
-                    ${renderBuilding('A', reservations.A, settings['A동_설명'] || '정원 6인 · 복층구조', year, month)}
-                    ${renderBuilding('B', reservations.B, settings['B동_설명'] || '정원 4인 · 원룸형', year, month)}
-                </div>
-                
-                <div class="legend">
-                    <div class="legend-item">
-                        <div class="legend-box available"></div>
-                        <span>예약 가능 (클릭하여 예약 추가)</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-box booked"></div>
-                        <span>예약 완료 (클릭하여 예약 취소)</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-box today"></div>
-                        <span>오늘</span>
-                    </div>
-                </div>
-            `;
-            
-            document.getElementById('content').innerHTML = html;
-        }
-
-        /**
-         * 각 동의 캘린더 렌더링
-         */
-        function renderBuilding(building, reservationList, description, year, month) {
             const monthName = `${year}년 ${month + 1}월`;
-            const calendarDays = generateCalendarDays(year, month, reservationList, building);
+            const calendarDays = generateCalendarDays(year, month, reservations);
             
-            return `
-                <div class="building-section building-${building.toLowerCase()}">
-                    <div class="building-header">
-                        <div class="building-info">
-                            <h2>${building}동</h2>
-                            <p>${description}</p>
-                        </div>
-                    </div>
-                    
+            const html = `
+                <div class="calendar-section">
                     <div class="month-nav">
                         <button onclick="changeMonth(-1)">◀</button>
                         <div class="current-month">${monthName}</div>
@@ -826,21 +955,41 @@
                         </div>
                     </div>
                 </div>
+                
+                <div class="legend">
+                    <div class="legend-item">
+                        <span class="badge available" style="pointer-events: none;">A</span>
+                        <span>예약 가능</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="badge booked" style="pointer-events: none;">A</span>
+                        <span>예약 완료</span>
+                    </div>
+                </div>
             `;
+            
+            document.getElementById('content').innerHTML = html;
         }
 
         /**
          * 캘린더 날짜 생성
          */
-        function generateCalendarDays(year, month, reservationList, building) {
+        function generateCalendarDays(year, month, reservations) {
             const firstDay = new Date(year, month, 1);
             const lastDay = new Date(year, month + 1, 0);
             const startDay = firstDay.getDay();
             const totalDays = lastDay.getDate();
             
-            const reservationMap = {};
-            reservationList.forEach(res => {
-                reservationMap[res.date] = res;
+            // 예약 데이터를 맵으로 변환
+            const reservationMapA = {};
+            const reservationMapB = {};
+            
+            reservations.A.forEach(res => {
+                reservationMapA[res.date] = res;
+            });
+            
+            reservations.B.forEach(res => {
+                reservationMapB[res.date] = res;
             });
             
             const today = new Date();
@@ -849,6 +998,7 @@
             
             let html = '';
             
+            // 이전 달 빈 칸
             const prevMonth = month === 0 ? 11 : month - 1;
             const prevYear = month === 0 ? year - 1 : year;
             const prevLastDay = new Date(prevYear, prevMonth + 1, 0).getDate();
@@ -858,6 +1008,7 @@
                 html += `<div class="calendar-day other-month"><div class="date">${day}</div></div>`;
             }
             
+            // 현재 달 날짜
             for (let day = 1; day <= totalDays; day++) {
                 const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 const dayOfWeek = new Date(year, month, day).getDay();
@@ -867,37 +1018,61 @@
                 
                 const isPast = currentDateObj < today;
                 
-                const reservation = reservationMap[dateString];
-                const isBooked = reservation && (reservation.status === '예약완료' || reservation.status === 'booked');
-                const isToday = dateString === todayString;
+                // A동, B동 예약 상태 확인
+                const reservationA = reservationMapA[dateString];
+                const reservationB = reservationMapB[dateString];
+                
+                const isBookedA = reservationA && (reservationA.status === '예약완료' || reservationA.status === 'booked');
+                const isBookedB = reservationB && (reservationB.status === '예약완료' || reservationB.status === 'booked');
                 
                 let classes = 'calendar-day';
                 if (dayOfWeek === 0) classes += ' sunday';
                 if (dayOfWeek === 6) classes += ' saturday';
                 
-                let onclickEvent = '';
                 if (!isPast) {
-                    if (isBooked) {
-                        classes += ' booked';
-                        onclickEvent = `onclick="deleteReservation('${building}', '${dateString}')"`;
-                    } else {
-                        classes += ' available';
-                        onclickEvent = `onclick="addReservation('${building}', '${dateString}')"`;
+                    // 둘 다 예약 완료 → 흰색 (과거 날짜와 동일)
+                    if (isBookedA && isBookedB) {
+                        classes += ' fully-booked';
+                    } 
+                    // 하나라도 예약 가능 → 하늘색
+                    else {
+                        classes += ' partial-available';
                     }
                 } else {
                     classes += ' past';
                 }
                 
-                if (isToday) classes += ' today';
+                // 상태 HTML 생성 (뱃지 스타일)
+                let statusHTML = '';
+                if (!isPast) {
+                    const badgesHTML = [];
+                    
+                    // A동 뱃지
+                    if (isBookedA) {
+                        badgesHTML.push(`<span class="badge booked" onclick="deleteReservation('A', '${dateString}')">A</span>`);
+                    } else {
+                        badgesHTML.push(`<span class="badge available" onclick="addReservation('A', '${dateString}')">A</span>`);
+                    }
+                    
+                    // B동 뱃지
+                    if (isBookedB) {
+                        badgesHTML.push(`<span class="badge booked" onclick="deleteReservation('B', '${dateString}')">B</span>`);
+                    } else {
+                        badgesHTML.push(`<span class="badge available" onclick="addReservation('B', '${dateString}')">B</span>`);
+                    }
+                    
+                    statusHTML = `<div class="building-badges">${badgesHTML.join('')}</div>`;
+                }
                 
                 html += `
-                    <div class="${classes}" ${onclickEvent}>
+                    <div class="${classes}">
                         <div class="date">${day}</div>
-                        <div class="status-badge"></div>
+                        ${statusHTML}
                     </div>
                 `;
             }
             
+            // 다음 달 빈 칸
             const remainingDays = 7 - ((startDay + totalDays) % 7);
             if (remainingDays < 7) {
                 for (let day = 1; day <= remainingDays; day++) {
